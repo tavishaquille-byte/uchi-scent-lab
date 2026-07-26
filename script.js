@@ -4,35 +4,28 @@
 
 // Daftar 4 keluarga aroma. Nama "key" harus sama persis dengan nilai
 // "Aroma Dominan" / "Aroma Aksen" di data/blends.js (Woody, Fresh,
-// Oriental, Floral) supaya nanti gampang dicocokkan.
+// Oriental, Floral) supaya nanti gampang dicocokkan. Warna kartunya
+// sekarang seragam (lihat buatKartu), jadi di sini cuma ikon & teks.
 const AROMA_OPTIONS = [
   {
     key: 'Woody',
     icon: '🌲',
-    desc: 'Hangat dan kokoh, kayak duduk santai deket api unggun.',
-    warna: 'bg-[#F1E4D2] border-[#B08968] text-[#5C3D22]',
-    warnaAktif: 'ring-[#B08968] bg-[#EAD9BE]'
+    desc: 'Hangat dan kokoh, kayak duduk santai deket api unggun.'
   },
   {
     key: 'Fresh',
     icon: '🌊',
-    desc: 'Segar dan ringan, kayak abis mandi pagi-pagi.',
-    warna: 'bg-[#EDEFDE] border-[#93A67C] text-[#45551F]',
-    warnaAktif: 'ring-[#93A67C] bg-[#E1E6CC]'
+    desc: 'Segar dan ringan, kayak abis mandi pagi-pagi.'
   },
   {
     key: 'Oriental',
     icon: '🔥',
-    desc: 'Berani dan hangat, nempel lama dan bikin pede.',
-    warna: 'bg-[#F5E2C8] border-[#C4783B] text-[#7A3B10]',
-    warnaAktif: 'ring-[#C4783B] bg-[#EFD3AD]'
+    desc: 'Berani dan hangat, nempel lama dan bikin pede.'
   },
   {
     key: 'Floral',
     icon: '🌸',
-    desc: 'Lembut dan feminin, kayak jalan-jalan di taman bunga.',
-    warna: 'bg-[#F4E1DD] border-[#C08A85] text-[#6B3A38]',
-    warnaAktif: 'ring-[#C08A85] bg-[#EBCDC7]'
+    desc: 'Lembut dan feminin, kayak jalan-jalan di taman bunga.'
   }
 ];
 
@@ -42,14 +35,15 @@ const pilihan = {
   accent: null
 };
 
-// Warna rona untuk latar foto di halaman hasil, berdasarkan aroma AKSEN
-// (bukan aroma dominan). Foto yang dipakai sama untuk aroma dominan yang
-// sama, tapi rona ini yang bikin nuansanya beda-beda tiap aksen.
-const AKSEN_RONA = {
-  Woody: '#1B2A4A', // navy
-  Fresh: '#0E6E64', // teal
-  Oriental: '#D9A62B', // kuning keemasan
-  Floral: '#5A4E8C' // biru keunguan
+// Warna per keluarga aroma, dipakai di halaman hasil: rona latar foto
+// (berdasar aroma AKSEN) dan warna isian radar chart (berdasar aroma
+// DOMINAN). Nilainya sama persis dengan warna navy/teal/kuning/biru
+// yang didaftarkan ke Tailwind di index.html.
+const WARNA_KELUARGA = {
+  Woody: '#2E2F5F', // navy
+  Fresh: '#57C0BC', // teal
+  Oriental: '#F0E63A', // kuning
+  Floral: '#22479B' // biru
 };
 
 // Ambil elemen-elemen yang dipakai berkali-kali
@@ -96,22 +90,23 @@ const fallbackBagikanTeksEl = document.getElementById('fallback-bagikan-teks');
 // Menyimpan racikan yang lagi tampil, dipakai tombol "Bagikan Hasilku"
 let blendSaatIni = null;
 
-// Bikin satu kartu aroma sebagai tombol
+// Bikin satu kartu aroma sebagai tombol. Gaya seragam untuk semua
+// keluarga aroma: putih+garis abu normal, garis biru pas hover,
+// latar biru penuh+teks putih pas terpilih.
 function buatKartu(opsi, terpilih, onKlik) {
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.dataset.key = opsi.key;
   btn.className =
-    'relative flex min-h-[140px] flex-col items-center justify-center rounded-2xl border-2 p-4 text-center shadow-sm transition-all duration-300 active:scale-95 md:min-h-[190px] md:p-6 md:hover:-translate-y-1 md:hover:border-[3px] md:hover:shadow-md ' +
-    opsi.warna +
-    (terpilih ? ' ring-4 ring-offset-2 ' + opsi.warnaAktif : '');
+    'relative flex min-h-[140px] flex-col items-center justify-center rounded-2xl border-2 p-4 text-center shadow-sm transition-all duration-300 active:scale-95 md:min-h-[190px] md:p-6 md:hover:-translate-y-1 md:hover:shadow-lg ' +
+    (terpilih ? 'border-biru bg-biru text-white' : 'border-abu bg-white text-navy md:hover:border-biru');
   btn.innerHTML =
     (terpilih
-      ? '<span class="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#C9A227] text-xs text-white shadow">&#10003;</span>'
+      ? '<span class="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-white text-biru text-xs shadow">&#10003;</span>'
       : '') +
     '<span class="text-3xl md:text-4xl">' + opsi.icon + '</span>' +
     '<span class="font-display mt-2 text-base font-semibold md:text-lg">' + opsi.key + '</span>' +
-    '<span class="mt-1 text-sm md:text-base">' + opsi.desc + '</span>';
+    '<span class="mt-1 text-sm opacity-80 md:text-base">' + opsi.desc + '</span>';
   btn.addEventListener('click', onKlik);
   return btn;
 }
@@ -175,8 +170,8 @@ const SUMBU_RADAR = [
 ];
 
 // Menggambar radar chart 5 sumbu (nilai 1-5) langsung pakai SVG, tanpa
-// library chart apapun.
-function buatRadarSVG(profile) {
+// library chart apapun. warnaAksen = warna keluarga aroma dominan racikan.
+function buatRadarSVG(profile, warnaAksen) {
   const NS = 'http://www.w3.org/2000/svg';
   const ukuran = 240;
   const tengah = ukuran / 2;
@@ -202,7 +197,7 @@ function buatRadarSVG(profile) {
   svg.setAttribute('class', 'mx-auto w-full max-w-xs md:max-w-sm lg:max-w-md');
 
   // Grid pentagon level 1 sampai 5 sebagai garis bantu (putih transparan
-  // supaya kelihatan di atas latar foto yang gelap)
+  // supaya kelihatan di atas latar navy yang gelap)
   for (let level = 1; level <= 5; level++) {
     const titikLevel = SUMBU_RADAR.map((_, i) => titikSumbu(i, level));
     svg.appendChild(buatPolygon(titikLevel, { fill: 'none', stroke: 'rgba(255,255,255,0.3)', 'stroke-width': '1' }));
@@ -221,10 +216,15 @@ function buatRadarSVG(profile) {
     svg.appendChild(garis);
   });
 
-  // Area nilai profil aroma yang sebenarnya
+  // Area nilai profil aroma yang sebenarnya, warnanya ikut keluarga aroma dominan
   const titikProfil = SUMBU_RADAR.map((s, i) => titikSumbu(i, profile[s.key]));
   svg.appendChild(
-    buatPolygon(titikProfil, { fill: 'rgba(201, 162, 39, 0.45)', stroke: '#E7CE7C', 'stroke-width': '2' })
+    buatPolygon(titikProfil, {
+      fill: warnaAksen,
+      'fill-opacity': '0.45',
+      stroke: warnaAksen,
+      'stroke-width': '2'
+    })
   );
 
   // Label nama tiap sumbu, ditaruh sedikit di luar radius maksimal
@@ -236,7 +236,7 @@ function buatRadarSVG(profile) {
     teks.setAttribute('text-anchor', 'middle');
     teks.setAttribute('dominant-baseline', 'middle');
     teks.setAttribute('font-size', '11');
-    teks.setAttribute('fill', '#FBF3E7');
+    teks.setAttribute('fill', '#FFFFFF');
     teks.textContent = s.label;
     svg.appendChild(teks);
   });
@@ -255,7 +255,7 @@ function isiChipNotes(container, notes) {
   container.innerHTML = '';
   (notes || []).forEach((catatan) => {
     const chip = document.createElement('span');
-    chip.className = 'rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-xs text-[#FBF3E7]';
+    chip.className = 'rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-xs text-white';
     chip.textContent = catatan;
     container.appendChild(chip);
   });
@@ -280,7 +280,7 @@ function perbaruiLatarHasil(dominant, accent) {
   };
   hasilBgFotoEl.src = 'assets/aroma/' + dominant.toLowerCase() + '.webp';
 
-  hasilBgTintEl.style.backgroundColor = AKSEN_RONA[accent] || AKSEN_RONA[dominant];
+  hasilBgTintEl.style.backgroundColor = WARNA_KELUARGA[accent] || WARNA_KELUARGA[dominant];
   hasilBgTintEl.style.opacity = '0.5';
 }
 
@@ -303,7 +303,7 @@ function tampilkanHasil() {
   hasilDeskripsiEl.textContent = blend.description;
 
   radarChartWrapperEl.innerHTML = '';
-  radarChartWrapperEl.appendChild(buatRadarSVG(blend.profile));
+  radarChartWrapperEl.appendChild(buatRadarSVG(blend.profile, WARNA_KELUARGA[blend.dominant]));
 
   hasilKetahananEl.textContent = 'Tahan ' + blend.longevityMin + '-' + blend.longevityMax + ' jam';
 
