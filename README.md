@@ -6,7 +6,7 @@ Purwarupa microsite untuk **UCHI Parfume**, disusun oleh **Tim Deadliners** untu
 
 ---
 
-## Latar Belakang
+## Latar  Belakang
 
 Strategi *Experiential Lab Transformation* mengubah gerai UCHI menjadi **Perfume Lab** — tempat konsumen meracik parfumnya sendiri, bukan sekadar mengisi ulang. Namun tahap awal hanya mencakup dua gerai percontohan.
 
